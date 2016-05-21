@@ -1,0 +1,19 @@
+extends ../layout
+
+block content
+    h1.
+        ID: #{pegawaidata._id}
+    form(action='/pegawai/#{pegawaidata._id}/edit',method='post',name='updateblob',enctype='application/x-www-form-urlencoded')
+        p Nama:
+            input#inputNama(type='text', value='#{pegawaidata.nama}', name='nama')
+        p NIP:
+            input#inputNip(type='number', value='#{pegawaidata.nip}', name='nip')
+        p Tanggal Lahir:
+            input#inputTanggallahir(type='date', value='#{pegawaitanggallahir}', name='tanggallahir')
+        p Aktifkah?:
+            input#inputAktifkah(type='checkbox', name='aktifkah', checked=('#{pegawaidata.aktifkah}'==='true' ? "checked" : undefined))
+        p
+            input(type='hidden',value='PUT',name='_method')
+        p
+            button#btnSubmit(type='submit').
+                Update

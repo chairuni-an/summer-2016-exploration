@@ -1,0 +1,16 @@
+extends ../layout
+
+block content
+    h1.
+        #{title}
+    form#formAddPegawai(name="addpegawai",method="post",action="/pegawai")
+        p Nama:
+            input#inputNama(type="text", placeholder="ex. John Smith", name="nama")
+        p NIP:
+            input#inputNip(type="number", placeholder="ex. 123456", name="nip")
+        p Tanggal Lahir:
+            input#inputTanggallahir(type="date", name="tanggallahir")
+        p Aktifkah?:
+            input#inputAktifkah(type="checkbox", name="aktifkah")
+        p
+            button#btnSubmit(type="submit") submit

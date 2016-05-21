@@ -1,0 +1,21 @@
+extends ../layout
+
+block content
+    h1.
+         #{title}
+    ul
+        - each pegawai_item, i in pegawai
+            li
+                = pegawai_item.nama
+                = pegawai_item.nip
+                = pegawai_item.tanggallahir
+                = pegawai_item.aktifkah
+                = pegawai_item._id
+                form(action='/pegawai/#{pegawai_item._id}/edit',method='post',enctype='application/x-www-form-urlencoded')
+                    input(type='hidden',value='DELETE',name='_method')
+                    button(type='submit').
+                        Delete
+                p
+                    a(href='/pegawai/#{pegawai_item._id}/edit') Edit
+                p
+                    a(href='/pegawai/#{pegawai_item._id}') Show

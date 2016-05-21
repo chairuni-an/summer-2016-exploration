@@ -50,7 +50,7 @@ router.route('/')
         var name = req.body.name;
         var badge = req.body.badge;
         var dob = req.body.dob;
-        var company = req.body.company;
+        //var company = req.body.company;
         var isloved = req.body.isloved;
         //call the create function for our database
         mongoose.model('Blob').create({
@@ -182,7 +182,7 @@ router.put('/:id/edit', function(req, res) {
     var name = req.body.name;
     var badge = req.body.badge;
     var dob = req.body.dob;
-    var company = req.body.company;
+    //var company = req.body.company;
     var isloved = req.body.isloved;
 
    //find the document by ID
