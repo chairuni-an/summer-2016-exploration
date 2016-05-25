@@ -1,0 +1,12 @@
+extends ../layout
+
+block content
+    h1.
+        ID: #{pegawaidata._id}
+    form(action='/pegawai/#{pegawaidata._id}/addgaji',method='post',name='updategaji',enctype='application/x-www-form-urlencoded')
+        p Tanggal Digaji:
+            input#inputTanggal(type='date', name='tanggal')
+        p Gaji Harian:
+            input#inputGajiHarian(type='number', placeholder="ex. 10000", name='gaji_harian')
+        p
+            button#btnSubmit(type='submit') submit

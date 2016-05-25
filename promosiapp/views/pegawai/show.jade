@@ -7,3 +7,21 @@ block content
     p NIP: #{pegawaidata.nip}
     p Tanggal Lahir: #{pegawaitanggallahir}
     p Aktifkah: #{pegawaidata.aktifkah}
+    p Daftar Gaji:
+        - if (typeof(pegawaidata.gajis) !== 'undefined'){
+            - if (pegawaidata.gajis.length){
+                p pegawai data exist, length not null
+                ul
+                    - each gaji_item, i in pegawaidata.gajis
+                        li
+                            = i
+                            = gaji_item._id
+                            = gaji_item.gaji.gaji_harian
+
+            -} else {
+                p pegawai data exist, length is null
+            -}
+
+        -} else {
+        p pegawai data does not exist
+        -}

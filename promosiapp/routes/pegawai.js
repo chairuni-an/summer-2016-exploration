@@ -1,4 +1,4 @@
-/* part 1 */
+/* part 1*/
 var express = require('express'),
     router = express.Router(),
     mongoose = require('mongoose'), //mongo connection
@@ -129,11 +129,14 @@ router.route('/:id')
         console.log('GET Retrieving ID: ' + pegawaidata._id);
         var pegawaitanggallahir = pegawaidata.tanggallahir.toISOString();
         pegawaitanggallahir = pegawaitanggallahir.substring(0, pegawaitanggallahir.indexOf('T'))
+        //var gaji = pegawaidata.gajis.?
+        //TODO ambil isi list pegawaidata.gajis here ?
         res.format({
           html: function(){
               res.render('pegawai/show', {
                 "pegawaitanggallahir" : pegawaitanggallahir,
                 "pegawaidata" : pegawaidata
+                //TODO masukkan isi list gajis here
               });
           },
           json: function(){
@@ -213,7 +216,80 @@ router.put('/:id/edit', function(req, res) {
         });
 });
 
+/* part 7 */
+//GET the individual blob by Mongo ID
+router.get('/:id/addgaji', function(req, res) {
+    //search for the blob within Mongo
+    mongoose.model('Pegawai').findById(req.id, function (err, pegawaidata) {
+        if (err) {
+            console.log('GET Error: There was a problem retrieving: ' + err);
+        } else {
+            //Return the blob
+            console.log('GET Retrieving ID: ' + pegawaidata._id);
+            //format the date properly for the value to show correctly in our edit form
+          //var pegawaitanggallahir = pegawaidata.tanggallahir.toISOString();
+          //pegawaitanggallahir = pegawaitanggallahir.substring(0, pegawaitanggallahir.indexOf('T'))
+            res.format({
+                //HTML response will render the 'edit.jade' template
+                html: function(){
+                       res.render('pegawai/newgaji', {
+                          title: 'Pegawai ' + pegawaidata._id,
+                          "pegawaidata" : pegawaidata
+                      });
+                 },
+                 //JSON response will return the JSON output
+                json: function(){
+                       res.json(pegawaidata);
+                 }
+            });
+        }
+    });
+});
+
 /* part 9 */
+//PUT to update a blob by ID, add gaji
+router.post('/:id/addgaji', function(req, res) {
+    // Get values from POST request. These can be done through forms or REST calls. These rely on the "name" attributes for forms
+    var tanggal = req.body.tanggal;
+    var gaji_harian = req.body.gaji_harian;
+
+    //call the create function for our database
+    mongoose.model('Gaji').create({
+        tanggal : tanggal,
+        gaji_harian : gaji_harian
+    }, function (err, gaji) {
+        if (err) {
+            res.send("There was a problem adding the information to the database.");
+        } else {
+            //Gaji has been created
+            console.log('POST creating new gaji: ' + gaji);
+            mongoose.model('Pegawai').findById(req.id, function (err, pegawai) {
+                pegawai.update({
+                    $push: {
+                        'gajis': {
+                            gaji: gaji
+                        }
+                    }
+                }, function(err, pegawaiID) {});
+            });
+            res.format({
+                //HTML response will set the location and redirect back to the home page. You could also create a 'success' page if that's your thing
+                html: function(){
+                    // If it worked, set the header so the address bar doesn't still say /adduser
+                    res.location("pegawai");
+                    // And forward to success page
+                    res.redirect("/pegawai");
+                },
+                //JSON response will show the newly created gaji
+                json: function(){
+                    res.json(gaji);
+                }
+            });
+        }
+    })
+});
+
+/* part 10 */
 //DELETE a Blob by ID
 router.delete('/:id/edit', function (req, res){
     //find blob by ID
@@ -246,5 +322,5 @@ router.delete('/:id/edit', function (req, res){
     });
 });
 
-/* part 10 */
+/* part 11 */
 module.exports = router;
