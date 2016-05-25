@@ -254,39 +254,29 @@ router.post('/:id/addgaji', function(req, res) {
     var gaji_harian = req.body.gaji_harian;
 
     //call the create function for our database
-    mongoose.model('Gaji').create({
-        tanggal : tanggal,
-        gaji_harian : gaji_harian
-    }, function (err, gaji) {
-        if (err) {
-            res.send("There was a problem adding the information to the database.");
-        } else {
-            //Gaji has been created
-            console.log('POST creating new gaji: ' + gaji);
-            mongoose.model('Pegawai').findById(req.id, function (err, pegawai) {
-                pegawai.update({
-                    $push: {
-                        'gajis': {
-                            gaji: gaji
-                        }
-                    }
-                }, function(err, pegawaiID) {});
-            });
-            res.format({
-                //HTML response will set the location and redirect back to the home page. You could also create a 'success' page if that's your thing
-                html: function(){
-                    // If it worked, set the header so the address bar doesn't still say /adduser
-                    res.location("pegawai");
-                    // And forward to success page
-                    res.redirect("/pegawai");
-                },
-                //JSON response will show the newly created gaji
-                json: function(){
-                    res.json(gaji);
+    mongoose.model('Pegawai').findById(req.id, function (err, pegawai) {
+        pegawai.update({
+            $push: {
+                'gajis': {
+                    tanggal: tanggal,
+                    gaji_harian: gaji_harian
                 }
-            });
+            }
+        }, function(err, pegawaiID) {});
+    });
+    res.format({
+        //HTML response will set the location and redirect back to the home page. You could also create a 'success' page if that's your thing
+        html: function(){
+            // If it worked, set the header so the address bar doesn't still say /adduser
+            res.location("pegawai");
+            // And forward to success page
+            res.redirect("/pegawai");
+        },
+        //JSON response will show the newly created gaji
+        json: function(){
+            res.json(gaji);
         }
-    })
+    });
 });
 
 /* part 10 */

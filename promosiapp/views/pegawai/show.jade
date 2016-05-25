@@ -2,26 +2,21 @@ extends ../layout
 
 block content
     h1.
-        ID: #{pegawaidata._id}
+        Pegawai ID: #{pegawaidata._id}
     p Nama: #{pegawaidata.nama}
     p NIP: #{pegawaidata.nip}
     p Tanggal Lahir: #{pegawaitanggallahir}
     p Aktifkah: #{pegawaidata.aktifkah}
     p Daftar Gaji:
-        - if (typeof(pegawaidata.gajis) !== 'undefined'){
-            - if (pegawaidata.gajis.length){
-                p pegawai data exist, length not null
-                ul
-                    - each gaji_item, i in pegawaidata.gajis
-                        li
-                            = i
-                            = gaji_item._id
-                            = gaji_item.gaji.gaji_harian
-
-            -} else {
-                p pegawai data exist, length is null
-            -}
+        - if (typeof(pegawaidata.gajis) !== 'undefined' && pegawaidata.gajis.length){
+            ul
+                - each gaji_item, i in pegawaidata.gajis
+                    li
+                        - var tanggal = gaji_item.tanggal.toISOString();
+                        - tanggal = tanggal.substring(0, tanggal.indexOf('T'))
+                        p Tanggal: #{tanggal}
+                        p Gaji Harian: Rp.#{gaji_item.gaji_harian}
 
         -} else {
-        p pegawai data does not exist
+            p Belum pernah mendapat gaji
         -}

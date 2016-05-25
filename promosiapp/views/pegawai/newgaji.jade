@@ -2,7 +2,7 @@ extends ../layout
 
 block content
     h1.
-        ID: #{pegawaidata._id}
+        Tambah Gaji Pegawai dengan ID: #{pegawaidata._id}
     form(action='/pegawai/#{pegawaidata._id}/addgaji',method='post',name='updategaji',enctype='application/x-www-form-urlencoded')
         p Tanggal Digaji:
             input#inputTanggal(type='date', name='tanggal')

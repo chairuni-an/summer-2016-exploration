@@ -10,10 +10,8 @@ var pegawaiSchema = new mongoose.Schema({
     tanggallahir: { type: Date, default: Date.now },
     aktifkah: Boolean,
     gajis:[{
-        gaji: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Gaji'
-        }
+        tanggal: { type: Date, default: Date.now },
+        gaji_harian: Number
     }]
 });
 mongoose.model('Pegawai', pegawaiSchema);

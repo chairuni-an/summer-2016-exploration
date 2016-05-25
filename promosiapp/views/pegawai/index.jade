@@ -7,10 +7,7 @@ block content
         - each pegawai_item, i in pegawai
             li
                 = pegawai_item.nama
-                = pegawai_item.nip
-                = pegawai_item.tanggallahir
-                = pegawai_item.aktifkah
-                = pegawai_item._id
+
                 form(action='/pegawai/#{pegawai_item._id}/edit',method='post',enctype='application/x-www-form-urlencoded')
                     input(type='hidden',value='DELETE',name='_method')
                     button(type='submit').
@@ -21,3 +18,6 @@ block content
                     a(href='/pegawai/#{pegawai_item._id}') Show
                 p
                     a(href='/pegawai/#{pegawai_item._id}/addgaji') Add Gaji
+
+    p
+        a(href='/pegawai/new') Tambah Pegawai Baru
