@@ -7,6 +7,10 @@ block content
     p NIP: #{pegawaidata.nip}
     p Tanggal Lahir: #{pegawaitanggallahir}
     p Aktifkah: #{pegawaidata.aktifkah}
+    p Total Gaji Terakhir: #{pegawaidata.gaji_total.jumlah}
+    - var tanggal_hitung = pegawaidata.gaji_total.tanggal_hitung.toISOString();
+    - tanggal_hitung = tanggal_hitung.substring(0, tanggal_hitung.indexOf('T'))
+    p Tanggal Update Gaji: #{tanggal_hitung}
     p Daftar Gaji:
         - if (typeof(pegawaidata.gajis) !== 'undefined' && pegawaidata.gajis.length){
             ul

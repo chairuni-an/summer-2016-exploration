@@ -53,12 +53,17 @@ router.route('/')
         var nip = req.body.nip;
         var tanggallahir = req.body.tanggallahir;
         var aktifkah = req.body.aktifkah;
+        var tanggal_hitung = new Date();
         //call the create function for our database
         mongoose.model('Pegawai').create({
             nama : nama,
             nip : nip,
             tanggallahir : tanggallahir,
-            aktifkah : aktifkah
+            aktifkah : aktifkah,
+            gaji_total: {
+                jumlah: 0,
+                tanggal_hitung: tanggal_hitung
+            }
         }, function (err, pegawaidata) {
             if (err) {
                 res.send("There was a problem adding the information to the database.");
@@ -360,6 +365,14 @@ router.get('/gaji/:date', function (req, res) {
                     nip : pegawai.nip,
                     gaji_total: gaji_total
                 });
+                //update it
+                var today = new Date();
+                pegawai.update({
+                    gaji_total : {
+                        jumlah : gaji_total,
+                        tanggal_hitung : today
+                    }
+                }, function (err, pegawai) {});
             });
             res.send(gajipegawai);
         }
