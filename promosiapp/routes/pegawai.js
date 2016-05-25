@@ -119,6 +119,33 @@ router.param('id', function(req, res, next, id) {
     });
 });
 
+/* part 5 */
+// route middleware to validate :date
+router.param('date', function(req, res, next, date) {
+    var len = date.length;
+    if (len != 10){
+        console.log(date + ' is invalid');
+        res.status(400)
+        var err = new Error('Bad Request');
+        err.status = 400;
+        res.format({
+            html: function(){
+                next(err);
+             },
+            json: function(){
+                   res.json({message : err.status  + ' ' + err});
+             }
+        });
+    } else {
+            //uncomment this next line if you want to see every JSON document response for every GET/PUT/DELETE call
+            //console.log(pegawaidata);
+            // once validation is done save the new item in the req
+        req.date = date;
+            // go to the next thing
+        next();
+    }
+});
+
 /* part 6 */
 router.route('/:id')
   .get(function(req, res) {
@@ -129,14 +156,11 @@ router.route('/:id')
         console.log('GET Retrieving ID: ' + pegawaidata._id);
         var pegawaitanggallahir = pegawaidata.tanggallahir.toISOString();
         pegawaitanggallahir = pegawaitanggallahir.substring(0, pegawaitanggallahir.indexOf('T'))
-        //var gaji = pegawaidata.gajis.?
-        //TODO ambil isi list pegawaidata.gajis here ?
         res.format({
           html: function(){
               res.render('pegawai/show', {
                 "pegawaitanggallahir" : pegawaitanggallahir,
                 "pegawaidata" : pegawaidata
-                //TODO masukkan isi list gajis here
               });
           },
           json: function(){
@@ -313,9 +337,11 @@ router.delete('/:id/edit', function (req, res){
 });
 
 /* part 4 */
-/* The API. */
+/* API to count gaji, can be accessed via http://localhost:3000/pegawai/gaji/yyyy-mm-dd */
 router.get('/gaji/:date', function(req, res) {
-    
+    var year = req.date.substring(0, 4);
+    var month = req.date.substring(5, 7);
+    var day = req.date.substring(8, 10);
     mongoose.model('Pegawai').find({}, function (err, pegawais) {
         if (err) {
             return console.error(err);
@@ -324,7 +350,12 @@ router.get('/gaji/:date', function(req, res) {
             pegawais.forEach(function (pegawai) {
                 var gaji_total = 0;
                 pegawai.gajis.forEach(function (gaji) {
-                    gaji_total += gaji.gaji_harian;
+                    var requested_date = new Date(year, month, day, 0, 0, 0, 0);
+                    var gaji_date = new Date(gaji.tanggal);
+                     if (gaji_date.getTime() <= requested_date.getTime()) {
+                         // include into the counting
+                         gaji_total += gaji.gaji_harian;
+                     }
                 })
                 gajipegawai.push({
                     nama : pegawai.nama,
@@ -334,51 +365,7 @@ router.get('/gaji/:date', function(req, res) {
             });
             res.send(gajipegawai);
         }
-    })
-    /*mongoose.model('Pegawai').findById(req.id, function (err, pegawaidata) {
-        if (err) {
-            return console.error(err);
-        } else {
-            //remove it from Mongo
-            pegawaidata.remove(function (err, pegawaidata) {
-                if (err) {
-                    return console.error(err);
-                } else {
-                    //Returning success messages saying it was deleted
-                    console.log('DELETE removing ID: ' + pegawaidata._id);
-                    res.format({
-                        //HTML returns us back to the main page, or you can create a success page
-                          html: function(){
-                               res.redirect("/pegawai");
-                         },
-                         //JSON returns the item with the message that is has been deleted
-                        json: function(){
-                               res.json({message : 'deleted',
-                                   item : pegawaidata
-                               });
-                         }
-                      });
-                }
-            });
-        }
-    });
-    res.format({
-         //JSON returns the item with the message that is has been deleted
-        json: function(){
-            res.json([
-                {
-                    nama : 'dininta',
-                    nip : '13513066',
-                    gaji_total: '800000'
-                },
-                {
-                    nama : 'dininta2',
-                    nip : '13513067',
-                    gaji_total: '800001'
-                }
-            ]);
-         }
-     });*/
+        })
 });
 
 /* part 11 */
