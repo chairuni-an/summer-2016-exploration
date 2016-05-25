@@ -5,7 +5,8 @@ var express = require('express'),
     router = express.Router(),
     mongoose = require('mongoose'), //mongo connection
     bodyParser = require('body-parser'), //parses information from POST
-    methodOverride = require('method-override'); //used to manipulate POST
+    methodOverride = require('method-override'), //used to manipulate POST
+    Pegawai = mongoose.model('Pegawai');
 
 /* part 2 */
 router.use(bodyParser.urlencoded({ extended: true }))
@@ -25,7 +26,7 @@ router.route('/')
     //GET all blobs
     .get(function (req, res, next) {
         //retrieve all pegawai from Monogo
-        mongoose.model('Pegawai').find({}, function (err, pegawai) {
+        Pegawai.find({}, function (err, pegawai) {
             if (err) {
                 return console.error(err);
             } else {
@@ -55,7 +56,7 @@ router.route('/')
         var aktifkah = req.body.aktifkah;
         var tanggal_hitung = new Date();
         //call the create function for our database
-        mongoose.model('Pegawai').create({
+        Pegawai.create({
             nama : nama,
             nip : nip,
             tanggallahir : tanggallahir,
@@ -98,7 +99,7 @@ router.get('/new', function (req, res) {
 router.param('id', function (req, res, next, id) {
     //console.log('validating ' + id + ' exists');
     //find the ID in the Database
-    mongoose.model('Pegawai').findById(id, function (err, pegawaidata) {
+    Pegawai.findById(id, function (err, pegawaidata) {
         //if it isn't found, we are going to repond with 404
         if (err) {
             console.log(id + ' was not found');
@@ -155,7 +156,7 @@ router.param('date', function (req, res, next, date) {
 /* part 6 */
 router.route('/:id')
     .get(function (req, res) {
-        mongoose.model('Pegawai').findById(req.id, function (err, pegawaidata) {
+        Pegawai.findById(req.id, function (err, pegawaidata) {
             if (err) {
                 console.log('GET Error: There was a problem retrieving: ' + err);
             } else {
@@ -181,7 +182,7 @@ router.route('/:id')
 //GET the individual pegawai by Mongo ID
 router.get('/:id/edit', function (req, res) {
     //search for the pegawai within Mongo
-    mongoose.model('Pegawai').findById(req.id, function (err, pegawaidata) {
+    Pegawai.findById(req.id, function (err, pegawaidata) {
         if (err) {
             console.log('GET Error: There was a problem retrieving: ' + err);
         } else {
@@ -217,7 +218,7 @@ router.put('/:id/edit', function (req, res) {
     var tanggallahir = req.body.tanggallahir;
     var aktifkah = req.body.aktifkah;
     //find the document by ID
-    mongoose.model('Pegawai').findById(req.id, function (err, pegawaidata) {
+    Pegawai.findById(req.id, function (err, pegawaidata) {
         //update it
         pegawaidata.update({
             nama : nama,
@@ -248,7 +249,7 @@ router.put('/:id/edit', function (req, res) {
 //GET the individual pegawai by Mongo ID
 router.get('/:id/addgaji', function (req, res) {
     //search for the pegawai within Mongo
-    mongoose.model('Pegawai').findById(req.id, function (err, pegawaidata) {
+    Pegawai.findById(req.id, function (err, pegawaidata) {
         if (err) {
             console.log('GET Error: There was a problem retrieving: ' + err);
         } else {
@@ -281,7 +282,7 @@ router.post('/:id/addgaji', function (req, res) {
     var tanggal = req.body.tanggal;
     var gaji_harian = req.body.gaji_harian;
     //call the create function for our database
-    mongoose.model('Pegawai').findById(req.id, function (err, pegawai) {
+    Pegawai.findById(req.id, function (err, pegawai) {
         pegawai.update({
             $push: {
                 'gajis': {
@@ -310,7 +311,7 @@ router.post('/:id/addgaji', function (req, res) {
 //DELETE a Pegawai by ID
 router.delete('/:id/edit', function (req, res) {
     //find pegawai by ID
-    mongoose.model('Pegawai').findById(req.id, function (err, pegawaidata) {
+    Pegawai.findById(req.id, function (err, pegawaidata) {
         if (err) {
             return console.error(err);
         } else {
@@ -345,7 +346,7 @@ router.get('/gaji/:date', function (req, res) {
     var year = req.date.substring(0, 4);
     var month = req.date.substring(5, 7);
     var day = req.date.substring(8, 10);
-    mongoose.model('Pegawai').find({}, function (err, pegawais) {
+    Pegawai.find({}, function (err, pegawais) {
         if (err) {
             return console.error(err);
         } else{
@@ -354,8 +355,7 @@ router.get('/gaji/:date', function (req, res) {
                 var gaji_total = 0;
                 pegawai.gajis.forEach(function (gaji) {
                     var requested_date = new Date(year, month, day, 0, 0, 0, 0);
-                    var gaji_date = new Date(gaji.tanggal);
-                    if (gaji_date.getTime() <= requested_date.getTime()) {
+                    if (gaji.tanggal.getTime() <= requested_date.getTime()) {
                         // include into the counting
                         gaji_total += gaji.gaji_harian;
                     }
