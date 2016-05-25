@@ -153,6 +153,38 @@ router.param('date', function (req, res, next, date) {
     }
 });
 
+/* part 5 */
+// route middleware to validate :nip
+router.param('nip', function (req, res, next, nip) {
+    console.log(nip + ' is param');
+    //TODO check why 13513010 can be found, I think it is because it is not error, just empty
+    Pegawai.find({nip: nip, aktifkah: true}, function (err, pegawai) {
+        //if it isn't found, we are going to respond with 404
+        if (err) {
+            console.log(nip + ' was not found');
+            res.status(404);
+            var err = new Error('NIP Not Found');
+            err.status = 404;
+            res.format({
+                html: function() {
+                    next(err);
+                 },
+                json: function() {
+                       res.json({message : err.status  + ' ' + err});
+                 }
+            });
+        //if it is found we continue on
+        } else {
+            console.log(nip + ' was found');
+            //TODO the check here
+            // once validation is done save the new item in the req
+            req.nip = nip;
+            // go to the next thing
+            next();
+        }
+    });
+});
+
 /* part 6 */
 router.route('/:id')
     .get(function (req, res) {
@@ -343,6 +375,38 @@ router.delete('/:id/edit', function (req, res) {
 /* part 4 */
 /* API to count gaji, can be accessed via http://localhost:3000/pegawai/gaji/yyyy-mm-dd */
 router.get('/gaji/:date', function (req, res) {
+    Pegawai.find({}, function (err, pegawais) {
+        if (err) {
+            return console.error(err);
+        } else{
+            var gajipegawai = [];
+            pegawais.forEach(function (pegawai) {
+                var gaji_total = 0;
+                pegawai.gajis.forEach(function (gaji) {
+                    var requested_date = new Date(req.date);
+                    if (gaji.tanggal.getTime() <= requested_date.getTime()) {
+                        // include into the counting
+                        gaji_total += gaji.gaji_harian;
+                    }
+                })
+                //update it
+                var today = new Date();
+                pegawai.update({
+                    gaji_total : {
+                        jumlah : gaji_total,
+                        tanggal_hitung : today
+                    }
+                }, function (err, pegawai) {});
+                gajipegawai.push(pegawai);
+            });
+            res.send(gajipegawai);
+        }
+    })
+});
+
+/* part 4 */
+/* API to count gaji, can be accessed via http://localhost:3000/pegawai/gaji/yyyy-mm-dd */
+router.get('/gaji/:date/:nip', function (req, res) {
     Pegawai.find({}, function (err, pegawais) {
         if (err) {
             return console.error(err);
