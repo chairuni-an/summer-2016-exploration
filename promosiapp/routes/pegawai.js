@@ -343,9 +343,6 @@ router.delete('/:id/edit', function (req, res) {
 /* part 4 */
 /* API to count gaji, can be accessed via http://localhost:3000/pegawai/gaji/yyyy-mm-dd */
 router.get('/gaji/:date', function (req, res) {
-    var year = req.date.substring(0, 4);
-    var month = req.date.substring(5, 7);
-    var day = req.date.substring(8, 10);
     Pegawai.find({}, function (err, pegawais) {
         if (err) {
             return console.error(err);
@@ -354,7 +351,7 @@ router.get('/gaji/:date', function (req, res) {
             pegawais.forEach(function (pegawai) {
                 var gaji_total = 0;
                 pegawai.gajis.forEach(function (gaji) {
-                    var requested_date = new Date(year, month, day, 0, 0, 0, 0);
+                    var requested_date = new Date(req.date);
                     if (gaji.tanggal.getTime() <= requested_date.getTime()) {
                         // include into the counting
                         gaji_total += gaji.gaji_harian;
