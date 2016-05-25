@@ -312,5 +312,74 @@ router.delete('/:id/edit', function (req, res){
     });
 });
 
+/* part 4 */
+/* The API. */
+router.get('/gaji/:date', function(req, res) {
+    
+    mongoose.model('Pegawai').find({}, function (err, pegawais) {
+        if (err) {
+            return console.error(err);
+        } else{
+            var gajipegawai = [];
+            pegawais.forEach(function (pegawai) {
+                var gaji_total = 0;
+                pegawai.gajis.forEach(function (gaji) {
+                    gaji_total += gaji.gaji_harian;
+                })
+                gajipegawai.push({
+                    nama : pegawai.nama,
+                    nip : pegawai.nip,
+                    gaji_total: gaji_total
+                });
+            });
+            res.send(gajipegawai);
+        }
+    })
+    /*mongoose.model('Pegawai').findById(req.id, function (err, pegawaidata) {
+        if (err) {
+            return console.error(err);
+        } else {
+            //remove it from Mongo
+            pegawaidata.remove(function (err, pegawaidata) {
+                if (err) {
+                    return console.error(err);
+                } else {
+                    //Returning success messages saying it was deleted
+                    console.log('DELETE removing ID: ' + pegawaidata._id);
+                    res.format({
+                        //HTML returns us back to the main page, or you can create a success page
+                          html: function(){
+                               res.redirect("/pegawai");
+                         },
+                         //JSON returns the item with the message that is has been deleted
+                        json: function(){
+                               res.json({message : 'deleted',
+                                   item : pegawaidata
+                               });
+                         }
+                      });
+                }
+            });
+        }
+    });
+    res.format({
+         //JSON returns the item with the message that is has been deleted
+        json: function(){
+            res.json([
+                {
+                    nama : 'dininta',
+                    nip : '13513066',
+                    gaji_total: '800000'
+                },
+                {
+                    nama : 'dininta2',
+                    nip : '13513067',
+                    gaji_total: '800001'
+                }
+            ]);
+         }
+     });*/
+});
+
 /* part 11 */
 module.exports = router;
