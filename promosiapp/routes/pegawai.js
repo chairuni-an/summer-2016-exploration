@@ -6,6 +6,9 @@ var express = require('express'),
     mongoose = require('mongoose'), //mongo connection
     bodyParser = require('body-parser'), //parses information from POST
     methodOverride = require('method-override'), //used to manipulate POST
+    // Include the async package
+    // Make sure you add "async" to your package.json
+    async = require("async"),
     Pegawai = mongoose.model('Pegawai');
 
 /* part 2 */
@@ -155,7 +158,7 @@ router.param('date', function (req, res, next, date) {
 
 /* part 5 */
 // route middleware to validate :nip
-router.param('nip', function (req, res, next, nip) {
+/*router.param('nip', function (req, res, next, nip) {
     console.log(nip + ' is param');
     //TODO check why 13513010 can be found, I think it is because it is not error, just empty
     Pegawai.findOne({nip: nip, aktifkah: true}, function (err, pegawai) {
@@ -181,6 +184,51 @@ router.param('nip', function (req, res, next, nip) {
             req.nip = nip;
             // go to the next thing
             next();
+        }
+    });
+});*/
+
+/* part 5 */
+// route middleware to validate :nips
+router.param('nips', function (req, res, next, nips) {
+    console.log(nips + ' is param');
+    var nips_array = nips.split(',');
+    console.log('length: ' + nips_array.length);
+    req.nips = [];
+    //TODO check why 13513010 can be found, I think it is because it is not error, just empty
+    async.each(nips_array, function (nip, next) {
+        Pegawai.findOne({nip: nip, aktifkah: true}, function (err, pegawai) {
+            //if it isn't found, we are going to respond with 404
+            if (err) {
+                return next (err);
+            } else {
+                console.log(nip + ' was found');
+                // once validation is done save the new item in the req
+                if (pegawai.aktifkah !== null){
+                    req.nips.push(nip);
+                }
+                next(null, pegawai);
+            }
+        });
+    }, function (err) {
+        if (err) {
+            console.log(nip + ' was not found');
+            res.status(404);
+            var err = new Error('error baru: NIP Not Found');
+            err.status = 404;
+            res.format({
+                html: function() {
+                    next(err);
+                 },
+                json: function() {
+                       res.json({message : err.status  + ' ' + err});
+                 }
+            });
+        }
+        else {
+            console.log("finished finding all nips");
+            next();
+            console.log("next");
         }
     });
 });
@@ -377,86 +425,156 @@ router.delete('/:id/edit', function (req, res) {
 router.get('/gaji/:date', function (req, res) {
     Pegawai.find({}, function (err, pegawais) {
         if (err) {
-            return console.error(err);
+            console.log(err);
+            process.exit(-1);
         } else{
             var gajipegawai = [];
-            pegawais.forEach(function (pegawai) {
-                var gaji_total = 0;
-                pegawai.gajis.forEach(function (gaji) {
-                    var requested_date = new Date(req.date);
-                    if (gaji.tanggal.getTime() <= requested_date.getTime()) {
-                        // include into the counting
-                        gaji_total += gaji.gaji_harian;
-                    }
-                })
-                //update it
-                var today = new Date();
-                pegawai.update({
-                    gaji_total : {
+
+            async.each(pegawais, function (pegawai, next) {
+                    var gaji_total = 0;
+
+                    pegawai.gajis.forEach(function (gaji) {
+                        var requested_date = new Date(req.date);
+                        if (gaji.tanggal.getTime() <= requested_date.getTime()) {
+                            // include into the counting
+                            gaji_total += gaji.gaji_harian;
+                        }
+                    });
+
+                    var today = new Date();
+                    pegawai.gaji_total = {
                         jumlah : gaji_total,
                         tanggal_hitung : today
-                    }
-                }, function (err, pegawai) {});
-                gajipegawai.push(pegawai);
-            });
-            res.send(gajipegawai);
+                    };
+
+                    pegawai.save(function (err, updatedPegawai) {
+                        if (err) {
+                            return next(err);
+                        }
+
+                        gajipegawai.push(updatedPegawai);
+                        next(null, updatedPegawai);
+                    });
+              },
+              // 3rd param is the function to call when everything's done
+              function (err) {
+                  if (err) {
+                      console.log(err);
+                      process.exit(-1);
+                  }
+
+                // All tasks are done now
+                res.send(gajipegawai);
+              }
+            );
         }
     })
 });
-
 /* part 4 */
-/* API to count gaji, can be accessed via http://localhost:3000/pegawai/gaji/yyyy-mm-dd */
-router.get('/gaji/:date/:nip', function (req, res) {
-    Pegawai.findOne({nip: req.nip}, function (err, pegawais) {
+/* API to count gaji for one specific pegawai, can be accessed via http://localhost:3000/pegawai/gaji/yyyy-mm-dd/nip */
+/*router.get('/gaji/:date/:nip', function (req, res) {
+    Pegawai.findOne({nip: req.nip}, function (err, pegawai) {
         if (err) {
-            return console.error(err);
+            console.log(err);
+            process.exit(-1);
         } else{
-            var gajipegawai = [];
             var gaji_total = 0;
-            pegawais.gajis.forEach(function (gaji) {
+            pegawai.gajis.forEach(function (gaji) {
                 var requested_date = new Date(req.date);
                 if (gaji.tanggal.getTime() <= requested_date.getTime()) {
                     // include into the counting
                     gaji_total += gaji.gaji_harian;
                 }
             })
-            gajipegawai.push({
-                nama : pegawais.nama,
-                nip : pegawais.nip,
-                gaji_total: gaji_total
-            });
-            //update it
             var today = new Date();
-            pegawais.update({
-                gaji_total : {
-                    jumlah : gaji_total,
-                    tanggal_hitung : today
+            pegawai.gaji_total = {
+                jumlah : gaji_total,
+                tanggal_hitung : today
+            };
+            console.log("here");
+            pegawai.save(function (err, updatedPegawai) {
+                if (err) {
+                    console.log(err);
+                    process.exit(-1);
                 }
-            }, function (err, pegawais) {});
-            /*pegawais.forEach(function (pegawai) {
-                var gaji_total = 0;
-                pegawai.gajis.forEach(function (gaji) {
-                    var requested_date = new Date(req.date);
-                    if (gaji.tanggal.getTime() <= requested_date.getTime()) {
-                        // include into the counting
-                        gaji_total += gaji.gaji_harian;
-                    }
-                })
-                gajipegawai.push({
-                    nama : pegawai.nama,
-                    nip : pegawai.nip,
-                    gaji_total: gaji_total
-                });
-                //update it
-                var today = new Date();
-                pegawai.update({
-                    gaji_total : {
-                        jumlah : gaji_total,
-                        tanggal_hitung : today
-                    }
-                }, function (err, pegawai) {});
-            });*/
-            res.send(gajipegawai);
+                console.log("there");
+                res.send(updatedPegawai);
+            });
+        }
+    })
+});*/
+
+/* part 4 */
+/* API to count gaji for specific pegawais, can be accessed via http://localhost:3000/pegawai/gaji/yyyy-mm-dd/nip1,nip2,nip3 */
+router.get('/gaji/:date/:nips', function (req, res) {
+    console.log('in get nips');
+    var gajipegawai = [];
+    async.each(req.nips, function (nip, next) {
+        Pegawai.findOne({nip: nip}, function (err, pegawai) {
+            if (err) {
+                console.log(err);
+                process.exit(-1);
+            }
+            var gaji_total = 0;
+            pegawai.gajis.forEach(function (gaji) {
+                var requested_date = new Date(req.date);
+                if (gaji.tanggal.getTime() <= requested_date.getTime()) {
+                    // include into the counting
+                    gaji_total += gaji.gaji_harian;
+                }
+            })
+            var today = new Date();
+            pegawai.gaji_total = {
+                jumlah : gaji_total,
+                tanggal_hitung : today
+            };
+            pegawai.save(function (err, updatedPegawai) {
+                if (err) {
+                    console.log(err);
+                    process.exit(-1);
+                }
+                gajipegawai.push(updatedPegawai);
+                next(null, updatedPegawai);
+            });
+        })
+        },
+        function (err) {
+            if (err) {
+                console.log(err);
+                process.exit(-1);
+            }
+
+          res.send(gajipegawai);
+        }
+
+    )
+    Pegawai.findOneAndUpdate({nip: req.nip}, function (err, pegawai) {
+        if (err) {
+            console.log(err);
+            process.exit(-1);
+        } else{
+            var gaji_total = 0;
+            pegawai.gajis.forEach(function (gaji) {
+                var requested_date = new Date(req.date);
+                if (gaji.tanggal.getTime() <= requested_date.getTime()) {
+                    // include into the counting
+                    gaji_total += gaji.gaji_harian;
+                }
+            })
+            var today = new Date();
+            pegawai.gaji_total = {
+                jumlah : gaji_total,
+                tanggal_hitung : today
+            };
+            console.log("here");
+            pegawai.save(function (err, updatedPegawai) {
+                if (err) {
+                    console.log(err);
+                    process.exit(-1);
+                }
+                console.log("there");
+                res.send(updatedPegawai);
+            });
         }
     })
 });
