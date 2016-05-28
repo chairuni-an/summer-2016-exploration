@@ -98,10 +98,15 @@ router.get('/new', function (req, res) {
     res.render('pegawai/new', { title: 'Tambah Pegawai Baru' });
 });
 
+/** GET New Pegawai page. **/
+router.get('/gaji', function (req, res) {
+    res.render('pegawai/totalgaji', { title: 'Cek Total Gaji Pegawai' });
+});
+
 /*** Middleware ***/
 /** route middleware to validate :id **/
 router.param('id', function (req, res, next, id) {
-    //console.log('validating ' + id + ' exists');
+    console.log('validating ' + id + ' exists');
     //find the ID in the Database
     Pegawai.findById(id, function (err, pegawaidata) {
         //if it isn't found, we are going to repond with 404
@@ -474,13 +479,30 @@ router.get('/gaji/:date/:nips', function (req, res) {
 
           res.send(gajipegawai);
         }
+    );
+});
 
-    )
-    Pegawai.findOneAndUpdate({nip: req.nip}, function (err, pegawai) {
-        if (err) {
-            console.log(err);
-            process.exit(-1);
-        } else{
+
+/** API sda using post **/
+router.post('/gaji', function (req, res) {
+    console.log("in total gaji process");
+    // Get values from POST request. These can be done through forms or REST calls. These rely on the "name" attributes for forms
+    var date = req.body.date;
+    var nips = req.body.nips;
+    //var nips = [13513054, 13513066];
+
+    console.log("here are nips: " + nips);
+    console.log("here are date: " + date);
+
+    var gajipegawai = [];
+    async.each(nips, function (nip, next) {
+        console.log("finding nip: " + nip);
+        Pegawai.findOne({nip: nip}, function (err, pegawai) {
+
+            if (err) {
+                console.log(err);
+                process.exit(-1);
+            }
             var gaji_total = 0;
             pegawai.gajis.forEach(function (gaji) {
                 var requested_date = new Date(req.date);
@@ -494,17 +516,25 @@ router.get('/gaji/:date/:nips', function (req, res) {
                 jumlah : gaji_total,
                 tanggal_hitung : today
             };
-            console.log("here");
             pegawai.save(function (err, updatedPegawai) {
                 if (err) {
                     console.log(err);
                     process.exit(-1);
                 }
-                console.log("there");
-                res.send(updatedPegawai);
+                gajipegawai.push(updatedPegawai);
+                next(null, updatedPegawai);
             });
+        })
+        },
+        function (err) {
+            if (err) {
+                console.log(err);
+                process.exit(-1);
+            }
+
+          res.send(gajipegawai);
         }
-    })
+    );
 });
 
 /*** export ***/

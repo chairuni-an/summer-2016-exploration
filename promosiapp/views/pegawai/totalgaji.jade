@@ -1,0 +1,14 @@
+extends ../layout
+
+block content
+    h1.
+        #{title}
+    form(action='/pegawai/gaji',method='post',name='totalgaji',enctype='application/x-www-form-urlencoded')
+        p Tanggal Batas:
+            input#inputTanggal(type='date', name='date')
+        p NIP pegawai 1:
+            input#nips(type='number', placeholder="ex. 10000", name='nips[1]')
+        p NIP pegawai 2:
+            input#nips(type='number', placeholder="ex. 10000", name='nips[1]')
+        p
+            button#btnSubmit(type='submit') submit
