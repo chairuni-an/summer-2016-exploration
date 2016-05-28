@@ -1,17 +1,18 @@
 "use strict";
 
-/* part 1*/
+/*** Initialization ***/
+/** inits **/
 var express = require('express'),
     router = express.Router(),
     mongoose = require('mongoose'), //mongo connection
     bodyParser = require('body-parser'), //parses information from POST
     methodOverride = require('method-override'), //used to manipulate POST
     // Include the async package
-    // Make sure you add "async" to your package.json
+    // Make sure you add "async" to your package.json -- I haven't -.-
     async = require("async"),
     Pegawai = mongoose.model('Pegawai');
 
-/* part 2 */
+/** set **/
 router.use(bodyParser.urlencoded({ extended: true }))
 router.use(methodOverride(function (req, res) {
     if (req.body && typeof req.body === 'object' && '_method' in req.body) {
@@ -22,11 +23,12 @@ router.use(methodOverride(function (req, res) {
     }
 }))
 
-/* part 3 */
+/*** Bases ***/
+/** REST operation base **/
 //build the REST operations at the base for pegawai
 //this will be accessible from http://localhost:3000/pegawai if the default route for / is left unchanged
 router.route('/')
-    //GET all blobs
+    //GET all pegawai
     .get(function (req, res, next) {
         //retrieve all pegawai from Monogo
         Pegawai.find({}, function (err, pegawai) {
@@ -91,14 +93,13 @@ router.route('/')
         })
     });
 
-/* part 4 */
-/* GET New Pegawai page. */
+/** GET New Pegawai page. **/
 router.get('/new', function (req, res) {
     res.render('pegawai/new', { title: 'Tambah Pegawai Baru' });
 });
 
-/* part 5 */
-// route middleware to validate :id
+/*** Middleware ***/
+/** route middleware to validate :id **/
 router.param('id', function (req, res, next, id) {
     //console.log('validating ' + id + ' exists');
     //find the ID in the Database
@@ -129,8 +130,7 @@ router.param('id', function (req, res, next, id) {
     });
 });
 
-/* part 5 */
-// route middleware to validate :date
+/** route middleware to validate :date **/
 router.param('date', function (req, res, next, date) {
     var len = date.length;
     if (len != 10) {
@@ -156,40 +156,7 @@ router.param('date', function (req, res, next, date) {
     }
 });
 
-/* part 5 */
-// route middleware to validate :nip
-/*router.param('nip', function (req, res, next, nip) {
-    console.log(nip + ' is param');
-    //TODO check why 13513010 can be found, I think it is because it is not error, just empty
-    Pegawai.findOne({nip: nip, aktifkah: true}, function (err, pegawai) {
-        //if it isn't found, we are going to respond with 404
-        if (err || pegawai === null) {
-            console.log(nip + ' was not found');
-            res.status(404);
-            var err = new Error('NIP Not Found');
-            err.status = 404;
-            res.format({
-                html: function() {
-                    next(err);
-                 },
-                json: function() {
-                       res.json({message : err.status  + ' ' + err});
-                 }
-            });
-        //if it is found we continue on
-        } else {
-            console.log(nip + ' was found');
-            //TODO the check here
-            // once validation is done save the new item in the req
-            req.nip = nip;
-            // go to the next thing
-            next();
-        }
-    });
-});*/
-
-/* part 5 */
-// route middleware to validate :nips
+/** route middleware to validate :nips **/
 router.param('nips', function (req, res, next, nips) {
     console.log(nips + ' is param');
     var nips_array = nips.split(',');
@@ -204,7 +171,7 @@ router.param('nips', function (req, res, next, nips) {
             } else {
                 console.log(nip + ' was found');
                 // once validation is done save the new item in the req
-                if (pegawai.aktifkah !== null){
+                if (pegawai !== null){
                     req.nips.push(nip);
                 }
                 next(null, pegawai);
@@ -233,7 +200,8 @@ router.param('nips', function (req, res, next, nips) {
     });
 });
 
-/* part 6 */
+/*** Process ***/
+/** get /:id page **/
 router.route('/:id')
     .get(function (req, res) {
         Pegawai.findById(req.id, function (err, pegawaidata) {
@@ -258,8 +226,7 @@ router.route('/:id')
         });
     });
 
-/* part 7 */
-//GET the individual pegawai by Mongo ID
+/** GET the individual pegawai by Mongo ID **/
 router.get('/:id/edit', function (req, res) {
     //search for the pegawai within Mongo
     Pegawai.findById(req.id, function (err, pegawaidata) {
@@ -289,8 +256,7 @@ router.get('/:id/edit', function (req, res) {
     });
 });
 
-/* part 8 */
-//PUT to update a pegawai by ID
+/** PUT to update a pegawai by ID **/
 router.put('/:id/edit', function (req, res) {
     // Get our REST or form values. These rely on the "name" attributes
     var nama = req.body.nama;
@@ -325,8 +291,7 @@ router.put('/:id/edit', function (req, res) {
     });
 });
 
-/* part 7 */
-//GET the individual pegawai by Mongo ID
+/** GET the individual pegawai by Mongo ID **/
 router.get('/:id/addgaji', function (req, res) {
     //search for the pegawai within Mongo
     Pegawai.findById(req.id, function (err, pegawaidata) {
@@ -355,8 +320,7 @@ router.get('/:id/addgaji', function (req, res) {
     });
 });
 
-/* part 9 */
-//PUT to update a pegawai by ID, add gaji
+/** PUT to update a pegawai by ID, add gaji **/
 router.post('/:id/addgaji', function (req, res) {
     // Get values from POST request. These can be done through forms or REST calls. These rely on the "name" attributes for forms
     var tanggal = req.body.tanggal;
@@ -387,8 +351,7 @@ router.post('/:id/addgaji', function (req, res) {
     });
 });
 
-/* part 10 */
-//DELETE a Pegawai by ID
+/** DELETE a Pegawai by ID **/
 router.delete('/:id/edit', function (req, res) {
     //find pegawai by ID
     Pegawai.findById(req.id, function (err, pegawaidata) {
@@ -420,8 +383,7 @@ router.delete('/:id/edit', function (req, res) {
     });
 });
 
-/* part 4 */
-/* API to count gaji, can be accessed via http://localhost:3000/pegawai/gaji/yyyy-mm-dd */
+/** API to count gaji, can be accessed via http://localhost:3000/pegawai/gaji/yyyy-mm-dd **/
 router.get('/gaji/:date', function (req, res) {
     Pegawai.find({}, function (err, pegawais) {
         if (err) {
@@ -470,42 +432,8 @@ router.get('/gaji/:date', function (req, res) {
         }
     })
 });
-/* part 4 */
-/* API to count gaji for one specific pegawai, can be accessed via http://localhost:3000/pegawai/gaji/yyyy-mm-dd/nip */
-/*router.get('/gaji/:date/:nip', function (req, res) {
-    Pegawai.findOne({nip: req.nip}, function (err, pegawai) {
-        if (err) {
-            console.log(err);
-            process.exit(-1);
-        } else{
-            var gaji_total = 0;
-            pegawai.gajis.forEach(function (gaji) {
-                var requested_date = new Date(req.date);
-                if (gaji.tanggal.getTime() <= requested_date.getTime()) {
-                    // include into the counting
-                    gaji_total += gaji.gaji_harian;
-                }
-            })
-            var today = new Date();
-            pegawai.gaji_total = {
-                jumlah : gaji_total,
-                tanggal_hitung : today
-            };
-            console.log("here");
-            pegawai.save(function (err, updatedPegawai) {
-                if (err) {
-                    console.log(err);
-                    process.exit(-1);
-                }
-                console.log("there");
-                res.send(updatedPegawai);
-            });
-        }
-    })
-});*/
 
-/* part 4 */
-/* API to count gaji for specific pegawais, can be accessed via http://localhost:3000/pegawai/gaji/yyyy-mm-dd/nip1,nip2,nip3 */
+/** API to count gaji for specific pegawais, can be accessed via http://localhost:3000/pegawai/gaji/yyyy-mm-dd/nip1,nip2,nip3 **/
 router.get('/gaji/:date/:nips', function (req, res) {
     console.log('in get nips');
     var gajipegawai = [];
@@ -579,5 +507,5 @@ router.get('/gaji/:date/:nips', function (req, res) {
     })
 });
 
-/* part 11 */
+/*** export ***/
 module.exports = router;
